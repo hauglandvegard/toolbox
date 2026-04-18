@@ -10,3 +10,11 @@ authors = [{ name = "Vegard"}]
 dependencies = [
 
 ]
+
+[project.optional-dependencies]
+scraper = [
+    "cffi==2.0.0",
+    "curl_cffi==0.15.0",
+    "diskcache==5.6.3",
+    "lxml==6.0.4"
+]
