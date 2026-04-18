@@ -5,7 +5,7 @@ from collections import deque
 
 
 class RateLimiter:
-    """Handles different strategies for pacing network requests."""
+    """Handles 'flat', 'random' (jitter), and 'window' (X req/Y sec) rate limiting."""
 
     logger = logging.getLogger(__name__)
 
@@ -18,6 +18,13 @@ class RateLimiter:
         window_requests=10,
         window_seconds=60.0,
     ):
+        """
+        Initializes strategy: flat_delay (s), random range (min/max), or window (reqs/s).
+
+        Args:
+        - mode (str):Options: "flat", "random", "window".
+                Defaults to "flat".
+        """
         self.mode = mode
 
         # Flat configs
@@ -36,13 +43,15 @@ class RateLimiter:
         self.request_timestamps = deque()
 
     def enforce(self):
-        """Calculates and applies the necessary sleep time based on the mode."""
+        """Calculates and applies sleep time before a request; call before every network fetch."""
         current_time = time.time()
 
         if self.mode == "flat":
             time_since_last = current_time - self.last_request_time
             if time_since_last < self.flat_delay:
-                time.sleep(self.flat_delay - time_since_last)
+                time_delta = self.flat_delay - time_since_last
+                self.logger.debug(f"Flat limit: sleeping for {time_delta:.2f}s")
+                time.sleep(time_delta)
             self.last_request_time = time.time()
 
         elif self.mode == "random":
